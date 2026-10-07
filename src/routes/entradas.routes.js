@@ -91,4 +91,32 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.get('/', async (req, res) => {
+
+    try {
+
+        const [entradas] = await pool.query(`
+            SELECT
+                e.id_entrada,
+                p.nome AS produto,
+                e.quantidade,
+                e.data_entrada
+            FROM entradas e
+            INNER JOIN produtos p
+                ON p.id_produto = e.id_produto
+            ORDER BY e.data_entrada DESC
+        `);
+
+        res.json(entradas);
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        res.status(500).json({
+            erro: 'Erro ao listar entradas'
+        });
+    }
+});
+
 module.exports = router;
