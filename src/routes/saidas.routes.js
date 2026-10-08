@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('../database');
+const { parseDateToSql } = require('../utils/date');
 
 const router = express.Router();
 
@@ -16,6 +17,14 @@ router.post('/', async (req, res) => {
     if (!id_produto || !quantidade || !data_saida) {
         return res.status(400).json({
             erro: 'Produto, quantidade e data de saída são obrigatórios'
+        });
+    }
+
+    const dataSaidaSql = parseDateToSql(data_saida);
+
+    if (!dataSaidaSql) {
+        return res.status(400).json({
+            erro: 'A data de saída deve estar no formato dd-mm-aaaa e ser válida'
         });
     }
 
@@ -67,7 +76,7 @@ router.post('/', async (req, res) => {
         `, [
             id_produto,
             quantidade,
-            data_saida
+            dataSaidaSql
         ]);
 
         // SUBTRAI DO ESTOQUE
@@ -116,7 +125,7 @@ router.get('/', async (req, res) => {
                 s.id_saida,
                 p.nome AS produto,
                 s.quantidade,
-                s.data_saida
+                DATE_FORMAT(s.data_saida, '%d-%m-%Y') AS data_saida
             FROM saidas s
             INNER JOIN produtos p
                 ON p.id_produto = s.id_produto
